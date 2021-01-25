@@ -18,7 +18,7 @@ public class FileManageController {
     @Autowired
     FileInfoMapper fileInfoMapper;
 
-    @PostMapping("/project/upload")
+    @PostMapping("/upload")
     public JSONObject uploadFile(@RequestBody UploadFile uploadFile){
         log.info("upload file. project: {}, file: {} ", uploadFile.getProjectName(), uploadFile.getFileName());
         JSONObject ret = new JSONObject();
