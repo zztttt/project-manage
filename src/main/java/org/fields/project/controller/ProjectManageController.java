@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fields.project.common.RespResult;
 import org.fields.project.config.Constant;
 import org.fields.project.entity.request.CreateProject;
+import org.fields.project.entity.request.CreateTable;
 import org.fields.project.entity.request.DeleteProject;
 import org.fields.project.entity.request.UpdateProjectStatus;
 import org.fields.project.utils.Utils;
@@ -24,21 +25,29 @@ public class ProjectManageController {
     @Autowired
     Utils utils;
 
-    @PostMapping("/create")
+    @PostMapping("/init")
+    public RespResult initTable(@RequestBody CreateTable createTable){
+        log.info("create table: {}", createTable.getTableName());
+        String tableName = createTable.getTableName();
+        List<String> columns = createTable.getColumns();
+        if(!utils.isTableExisting(tableName)){
+            List<String> types = new ArrayList<>();
+            for(String column: columns){
+                types.add("varchar(30)");
+            }
+            Boolean status = utils.createTable(tableName, columns, types);
+            return status? RespResult.success(""):RespResult.fail();
+        }else{
+            return RespResult.fail(400L, tableName + " 已存在");
+        }
+    }
+
+    @PostMapping("/insert")
     public RespResult createProject(@RequestBody CreateProject createProject){
         log.info("create project: {}", createProject);
-
         String tableName = createProject.getTableName();
         if(!utils.isTableExisting(tableName)){
-            List<String> columns = new ArrayList<String>(){{
-                add("projectName");add("investor");add("projectType");
-                add("projectCategory");add("date");add("status");
-            }};
-            List<String> columnTypes = new ArrayList<String>(){{
-                add("varchar(50)");add("varchar(50)");add("varchar(20)");
-                add("varchar(20)");add("varchar(10)");add("varchar(20)");
-            }};
-            utils.createTable(tableName, columns, columnTypes);
+            return RespResult.fail(400L, tableName + " 不存在");
         }
 
         Date date = new Date();
@@ -55,11 +64,7 @@ public class ProjectManageController {
 
         Boolean status = utils.insertOneLine(tableName, values);
         log.info("create result: {}", status);
-        if(status){
-            return RespResult.success("");
-        }else{
-            return RespResult.fail();
-        }
+        return status? RespResult.success(""):RespResult.fail();
     }
 
     @PostMapping("/delete")
@@ -78,19 +83,13 @@ public class ProjectManageController {
     }
 
     @PostMapping("/update")
-    public JSONObject updateProjectStatus(@RequestBody UpdateProjectStatus updateProjectStatus){
+    public RespResult updateProjectStatus(@RequestBody UpdateProjectStatus updateProjectStatus){
         log.info("updateProjectStatus: {}", updateProjectStatus);
         JSONObject ret = new JSONObject();
         Boolean status = utils.updateOneLine("projectInfo", "projectName", updateProjectStatus.getProjectName(),"status", updateProjectStatus.getNewStatus());
 
-
         log.info("update result: {}", status);
-        if(status){
-            ret.put("code", "update ok");
-        }else{
-            ret.put("code", "update error");
-        }
-        return ret;
+        return status? RespResult.success(""):RespResult.fail();
     }
 
     public void generateDefaultFiles(String projectName){
