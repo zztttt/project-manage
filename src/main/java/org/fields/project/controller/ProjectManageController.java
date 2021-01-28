@@ -2,6 +2,7 @@ package org.fields.project.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import org.fields.project.common.RespResult;
 import org.fields.project.config.Constant;
 import org.fields.project.entity.request.CreateProject;
 import org.fields.project.entity.request.DeleteProject;
@@ -24,9 +25,8 @@ public class ProjectManageController {
     Utils utils;
 
     @PostMapping("/create")
-    public JSONObject createProject(@RequestBody CreateProject createProject){
+    public RespResult createProject(@RequestBody CreateProject createProject){
         log.info("create project: {}", createProject);
-        JSONObject ret = new JSONObject();
 
         String tableName = createProject.getTableName();
         if(!utils.isTableExisting(tableName)){
@@ -52,17 +52,14 @@ public class ProjectManageController {
             add(dateStr);
             add(Constant.STATUS_DEFAULT);
         }};
+
         Boolean status = utils.insertOneLine(tableName, values);
-
-        //generateDefaultFiles(createProject.getProjectName());
-
         log.info("create result: {}", status);
         if(status){
-            ret.put("code", "create ok");
+            return RespResult.success("");
         }else{
-            ret.put("code", "create error");
+            return RespResult.fail();
         }
-        return ret;
     }
 
     @PostMapping("/delete")
