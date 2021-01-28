@@ -1,6 +1,7 @@
 package org.fields.project.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.extension.exceptions.ApiException;
 import lombok.extern.slf4j.Slf4j;
 import org.fields.project.common.RespResult;
 import org.fields.project.config.Constant;
@@ -18,6 +19,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @RestController
@@ -42,22 +44,30 @@ public class ProjectManageController {
         }
     }
 
-    @PostMapping("/insert")
+    @PostMapping("/create")
     public RespResult createProject(@RequestBody CreateProject createProject){
         log.info("create project: {}", createProject);
         String tableName = createProject.getTableName();
+        String contextStr = createProject.getContext();
+        JSONObject context = JSONObject.parseObject(contextStr);
+        String projectName = (String) context.get("xmmc");
+
         if(!utils.isTableExisting(tableName)){
             return RespResult.fail(400L, tableName + " 不存在");
+        }
+        if(utils.queryOneLine(tableName, "projectName", projectName)){
+            log.info("project {} is already existing.", projectName);
+            throw new ApiException("project is already existing");
         }
 
         Date date = new Date();
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
         String dateStr = simpleDateFormat.format(date);
         List<String> values = new ArrayList<String>(){{
-            add(createProject.getXmmc());
-            add(createProject.getTzf());
-            add(createProject.getXmlx());
-            add(createProject.getXmlb());
+            add((String) context.get("xmmc"));
+            add((String) context.get("tzf"));
+            add((String) context.get("xmlx"));
+            add((String) context.get("xmlb"));
             add(dateStr);
             add(Constant.STATUS_DEFAULT);
         }};
@@ -85,9 +95,26 @@ public class ProjectManageController {
     @PostMapping("/update")
     public RespResult updateProjectStatus(@RequestBody UpdateProjectStatus updateProjectStatus){
         log.info("updateProjectStatus: {}", updateProjectStatus);
-        JSONObject ret = new JSONObject();
-        Boolean status = utils.updateOneLine("projectInfo", "projectName", updateProjectStatus.getProjectName(),"status", updateProjectStatus.getNewStatus());
+        String tableName = updateProjectStatus.getTableName();
+        String contextStr = updateProjectStatus.getContext();
+        JSONObject context = JSONObject.parseObject(contextStr);
+        String projectName = (String) context.get("xmmc");
+        if(!utils.queryOneLine(tableName, "projectName", projectName)){
+            log.info("table:{} projectName:{} is not existing.", tableName, projectName);
+            throw new ApiException("project is not existing");
+        }
 
+        Set<String> keys = context.keySet();
+        List<String> columns = new ArrayList<>();
+        List<String> values = new ArrayList<>();
+        for(String key: keys){
+            if(!key.equals("xmmc")){
+                columns.add(front2End(key));
+                values.add((String) context.get(key));
+            }
+        }
+
+        Boolean status = utils.updateOneLine(tableName, "projectName", projectName, columns, values);
         log.info("update result: {}", status);
         return status? RespResult.success(""):RespResult.fail();
     }
@@ -116,5 +143,47 @@ public class ProjectManageController {
 //            int result = fileInfoMapper.insert(fileInfo);
 //            assert result == 1;
 //        }
+    }
+
+    private String back2Front(String src){
+        String ret = null;
+        switch (src){
+            case "projectName":
+                ret = "xmmc";
+                break;
+            case "projectType":
+                ret = "xmlx";
+                break;
+            case "projectCategory":
+                ret = "xmlb";
+                break;
+            case "investor":
+                ret = "tzf";
+                break;
+            default:
+                assert false;
+        }
+        return ret;
+    }
+
+    private String front2End(String src){
+        String ret = null;
+        switch (src){
+            case "xmmc":
+                ret = "projectName";
+                break;
+            case "xmlx":
+                ret = "projectType";
+                break;
+            case "xmlb":
+                ret = "projectCategory";
+                break;
+            case "tzf":
+                ret = "investor";
+                break;
+            default:
+                assert false;
+        }
+        return ret;
     }
 }

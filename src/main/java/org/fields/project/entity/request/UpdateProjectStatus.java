@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class UpdateProjectStatus {
-    private String projectName;
-    private String newStatus;
+    private String tableName;
+    private String context;
 }

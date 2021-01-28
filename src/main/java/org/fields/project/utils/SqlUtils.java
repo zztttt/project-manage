@@ -123,6 +123,28 @@ public class SqlUtils {
         return sb.toString();
     }
 
+    /**
+     * update t1 set d1 = d1, d2 = d2, ...  where srcColumn = srcValue
+     * @param tableName
+     * @param srcColumn
+     * @param srcValue
+     * @param columns
+     * @param values
+     * @return
+     */
+    public String updateOneLine(String tableName, String srcColumn, String srcValue, List<String> columns, List<String> values){
+        StringBuilder sb = new StringBuilder();
+        sb.append("update ").append(tableName).append(" set ");
+        String link = "";
+        int len = columns.size();
+        for(int i = 0; i < len; ++i){
+            sb.append(link).append(columns.get(i)).append("='").append(values.get(i)).append("' ");
+            link = ",";
+        }
+        sb.append("where ").append(srcColumn).append("='").append(srcValue).append("'");
+        return sb.toString();
+    }
+
     public String queryTableMetadataDetails(String tableName){
         StringBuilder sb = new StringBuilder();
         sb.append("select columnName from ").append(tableName);

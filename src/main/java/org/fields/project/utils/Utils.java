@@ -88,6 +88,15 @@ public class Utils {
         return results.size() == 1;
     }
 
+    /**
+     * update t1 set dstColumn=dstValue where srcColumn=srcValue
+     * @param tableName
+     * @param srcColumn
+     * @param srcValue
+     * @param dstColumn
+     * @param dstValue
+     * @return
+     */
     public Boolean updateOneLine(String tableName, String srcColumn, String srcValue, String dstColumn, String dstValue){
         if(!queryOneLine(tableName, srcColumn, srcValue)){
             log.info("updateOneLine error. there is no line");
@@ -98,13 +107,24 @@ public class Utils {
         return result == 1;
     }
 
+    public Boolean updateOneLine(String tableName, String srcColumn, String srcValue, List<String> columns, List<String> values){
+        if(!queryOneLine(tableName, srcColumn, srcValue)){
+            log.info("updateOneLine error. there is no line");
+            throw new ApiException("updateOneLine error. there is no line");
+        }
+        String sql = sqlUtils.updateOneLine(tableName, srcColumn, srcValue, columns, values);
+        log.info("update :{}", sql);
+        int result = jdbcTemplate.update(sql);
+        return result == 1;
+    }
+
     /**
      * 查询一个table的所有列属性有哪些，以供insert操作
      * @param tableName
      * @return
      */
-    private List<String> queryTableColumns(String tableName){
-        String sql = "select columnName from tableMetadataDetail";
+    public List<String> queryTableColumns(String tableName){
+        String sql = "select columnName from tableMetadataDetail where tableName = '" + tableName + "'";
         List<String> ret = jdbcTemplate.queryForList(sql, String.class);
         return ret;
     }
