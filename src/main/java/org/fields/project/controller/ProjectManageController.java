@@ -1,17 +1,12 @@
 package org.fields.project.controller;
 
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import lombok.extern.slf4j.Slf4j;
-import org.fields.project.common.Utils;
 import org.fields.project.config.Constant;
-import org.fields.project.entity.FileInfo;
-import org.fields.project.entity.ProjectInfo;
 import org.fields.project.entity.request.CreateProject;
 import org.fields.project.entity.request.DeleteProject;
 import org.fields.project.entity.request.UpdateProjectStatus;
-import org.fields.project.mapper.FileInfoMapper;
-import org.fields.project.mapper.ProjectInfoMapper;
+import org.fields.project.utils.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,28 +19,39 @@ import java.util.List;
 @RestController
 public class ProjectManageController {
     @Autowired
-    ProjectInfoMapper projectInfoMapper;
-    @Autowired
-    FileInfoMapper fileInfoMapper;
+    Utils utils;
 
     @PostMapping("/create")
     public JSONObject createProject(@RequestBody CreateProject createProject){
         log.info("create project: {}", createProject);
         JSONObject ret = new JSONObject();
 
-        ProjectInfo projectInfo = new ProjectInfo();
-        projectInfo.setProjectName(createProject.getProjectName());
-        projectInfo.setInvestor(createProject.getInvestor());
-        projectInfo.setProjectType(createProject.getProjectType());
-        projectInfo.setProjectCategory(createProject.getProjectCategory());
-        projectInfo.setDate(createProject.getDate());
-        projectInfo.setStatus(Constant.STATUS_DEFAULT);
+        if(!utils.isTableExisting("projectInfo")){
+            List<String> columns = new ArrayList<String>(){{
+                add("projectName");add("investor");add("projectType");
+                add("projectCategory");add("date");add("status");
+            }};
+            List<String> columnTypes = new ArrayList<String>(){{
+                add("varchar(50)");add("varchar(50)");add("varchar(20)");
+                add("varchar(20)");add("varchar(10)");add("varchar(20)");
+            }};
+            utils.createTable("projectInfo", columns, columnTypes);
+        }
 
-        int result = projectInfoMapper.insert(projectInfo);
-        generateDefaultFiles(createProject.getProjectName());
+        List<String> values = new ArrayList<String>(){{
+            add(createProject.getProjectName());
+            add(createProject.getInvestor());
+            add(createProject.getProjectType());
+            add(createProject.getProjectCategory());
+            add(createProject.getDate());
+            add(Constant.STATUS_DEFAULT);
+        }};
+        Boolean status = utils.insertOneLine("projectInfo", values);
 
-        log.info("insert result: {}", result);
-        if(result == 1){
+        //generateDefaultFiles(createProject.getProjectName());
+
+        log.info("insert result: {}", status);
+        if(status){
             ret.put("code", "create ok");
         }else{
             ret.put("code", "create error");
@@ -53,16 +59,14 @@ public class ProjectManageController {
         return ret;
     }
 
-    @PostMapping("delete")
+    @PostMapping("/delete")
     public JSONObject deleteProject(@RequestBody DeleteProject deleteProject){
         log.info("delete project: {}", deleteProject);
         JSONObject ret = new JSONObject();
+        Boolean status = utils.deleteOneLine("projectInfo", "projectName", deleteProject.getProjectName());
 
-        UpdateWrapper<ProjectInfo> updateWrapper = new UpdateWrapper<>();
-        updateWrapper.eq("projectName", deleteProject.getProjectName());
-        int result = projectInfoMapper.delete(updateWrapper);
-        log.info("update result: {}", result);
-        if(result == 1){
+        log.info("delete result: {}", status);
+        if(status){
             ret.put("code", "delete ok");
         }else{
             ret.put("code", "delete error");
@@ -74,12 +78,11 @@ public class ProjectManageController {
     public JSONObject updateProjectStatus(@RequestBody UpdateProjectStatus updateProjectStatus){
         log.info("updateProjectStatus: {}", updateProjectStatus);
         JSONObject ret = new JSONObject();
+        Boolean status = utils.updateOneLine("projectInfo", "projectName", updateProjectStatus.getProjectName(),"status", updateProjectStatus.getNewStatus());
 
-        UpdateWrapper<ProjectInfo> updateWrapper = new UpdateWrapper<>();
-        updateWrapper.eq("projectName", updateProjectStatus.getProjectName()).set("status", updateProjectStatus.getNewStatus());
-        int result = projectInfoMapper.update(null, updateWrapper);
-        log.info("update result: {}", result);
-        if(result == 1){
+
+        log.info("update result: {}", status);
+        if(status){
             ret.put("code", "update ok");
         }else{
             ret.put("code", "update error");
@@ -100,16 +103,16 @@ public class ProjectManageController {
             add("安全评价报告及审批意见");
             add("安全评价报告");
         }};
-        for(String fileName: defaultFiles){
-            FileInfo fileInfo = new FileInfo();
-            fileInfo.setProjectName(projectName);
-            fileInfo.setFileName(fileName);
-            fileInfo.setUploadResult(Constant.UPLOAD_RESULT_DEFAULT);
-            fileInfo.setUploader(Constant.UPLOADER_DEFAULT);
-            fileInfo.setUploadTime(Constant.UPLOAD_TIME_DEFAULT);
-            fileInfo.setIsUploaded(false);
-            int result = fileInfoMapper.insert(fileInfo);
-            assert result == 1;
-        }
+//        for(String fileName: defaultFiles){
+//            FileInfo fileInfo = new FileInfo();
+//            fileInfo.setProjectName(projectName);
+//            fileInfo.setFileName(fileName);
+//            fileInfo.setUploadResult(Constant.UPLOAD_RESULT_DEFAULT);
+//            fileInfo.setUploader(Constant.UPLOADER_DEFAULT);
+//            fileInfo.setUploadTime(Constant.UPLOAD_TIME_DEFAULT);
+//            fileInfo.setIsUploaded(false);
+//            int result = fileInfoMapper.insert(fileInfo);
+//            assert result == 1;
+//        }
     }
 }
