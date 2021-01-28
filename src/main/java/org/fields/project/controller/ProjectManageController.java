@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Slf4j
@@ -26,7 +28,8 @@ public class ProjectManageController {
         log.info("create project: {}", createProject);
         JSONObject ret = new JSONObject();
 
-        if(!utils.isTableExisting("projectInfo")){
+        String tableName = createProject.getTableName();
+        if(!utils.isTableExisting(tableName)){
             List<String> columns = new ArrayList<String>(){{
                 add("projectName");add("investor");add("projectType");
                 add("projectCategory");add("date");add("status");
@@ -35,22 +38,25 @@ public class ProjectManageController {
                 add("varchar(50)");add("varchar(50)");add("varchar(20)");
                 add("varchar(20)");add("varchar(10)");add("varchar(20)");
             }};
-            utils.createTable("projectInfo", columns, columnTypes);
+            utils.createTable(tableName, columns, columnTypes);
         }
 
+        Date date = new Date();
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
+        String dateStr = simpleDateFormat.format(date);
         List<String> values = new ArrayList<String>(){{
-            add(createProject.getProjectName());
-            add(createProject.getInvestor());
-            add(createProject.getProjectType());
-            add(createProject.getProjectCategory());
-            add(createProject.getDate());
+            add(createProject.getXmmc());
+            add(createProject.getTzf());
+            add(createProject.getXmlx());
+            add(createProject.getXmlb());
+            add(dateStr);
             add(Constant.STATUS_DEFAULT);
         }};
-        Boolean status = utils.insertOneLine("projectInfo", values);
+        Boolean status = utils.insertOneLine(tableName, values);
 
         //generateDefaultFiles(createProject.getProjectName());
 
-        log.info("insert result: {}", status);
+        log.info("create result: {}", status);
         if(status){
             ret.put("code", "create ok");
         }else{
