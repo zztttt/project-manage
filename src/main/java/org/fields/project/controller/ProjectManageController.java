@@ -72,6 +72,8 @@ public class ProjectManageController {
         Date date = new Date();
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
         String dateStr = simpleDateFormat.format(date);
+
+
         List<String> values = new ArrayList<String>(){{
             add((String) context.get("tzf"));
             add((String) context.get("xmmc"));
@@ -108,8 +110,9 @@ public class ProjectManageController {
         String contextStr = updateProjectStatus.getContext();
         JSONObject context = JSONObject.parseObject(contextStr);
         //String projectName = (String) context.get("xmmc");
-        Integer id = (Integer) context.get("id");
-        if(!utils.queryOneLine(tableName, "id", String.valueOf(id))){
+        //Integer id = (Integer) context.get("id");
+        String id = (String) context.get("id");
+        if(!utils.queryOneLine(tableName, "id", id)){
             log.info("table:{} id:{} is not existing.", tableName, id);
             //throw new ApiException("project is not existing");
             return RespResult.fail(500L, "项目不存在");
@@ -125,7 +128,7 @@ public class ProjectManageController {
             }
         }
 
-        Boolean status = utils.updateOneLine(tableName, "id", String.valueOf(id), columns, values);
+        Boolean status = utils.updateOneLine(tableName, "id", id, columns, values);
         log.info("update result: {}", status);
         return status? RespResult.success(""):RespResult.fail();
     }
