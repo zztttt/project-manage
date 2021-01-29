@@ -109,9 +109,10 @@ public class ProjectManageController {
         String tableName = updateProjectStatus.getTableName();
         String contextStr = updateProjectStatus.getContext();
         JSONObject context = JSONObject.parseObject(contextStr);
-        String projectName = (String) context.get("xmmc");
-        if(!utils.queryOneLine(tableName, "xmmc", projectName)){
-            log.info("table:{} projectName:{} is not existing.", tableName, projectName);
+        //String projectName = (String) context.get("xmmc");
+        String id = (String) context.get("id");
+        if(!utils.queryOneLine(tableName, "id", id)){
+            log.info("table:{} id:{} is not existing.", tableName, id);
             //throw new ApiException("project is not existing");
             return RespResult.fail(500L, "项目不存在");
         }
@@ -120,13 +121,13 @@ public class ProjectManageController {
         List<String> columns = new ArrayList<>();
         List<String> values = new ArrayList<>();
         for(String key: keys){
-            if(!key.equals("xmmc")){
+            if(!key.equals("id")){
                 columns.add(key);
                 values.add((String) context.get(key));
             }
         }
 
-        Boolean status = utils.updateOneLine(tableName, "xmmc", projectName, columns, values);
+        Boolean status = utils.updateOneLine(tableName, "id", id, columns, values);
         log.info("update result: {}", status);
         return status? RespResult.success(""):RespResult.fail();
     }
