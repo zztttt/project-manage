@@ -53,21 +53,32 @@ public class ProjectManageController {
         String projectName = (String) context.get("xmmc");
 
         if(!utils.isTableExisting(tableName)){
-            return RespResult.fail(400L, tableName + " 不存在");
+            // init table
+            Set<String> keys = context.keySet();
+            List<String> columns = new ArrayList<>(keys);
+            List<String> columnTypes = new ArrayList<>();
+            for(String key: keys){
+                columnTypes.add("varchar(30)");
+            }
+            //date and status
+            columns.add("date");columns.add("status");
+            columnTypes.add("varchar(30)");columnTypes.add("varchar(30)");
+            Boolean status = utils.createTable(tableName, columns, columnTypes);
+            //return status?RespResult.success(""):RespResult.fail(400L, tableName + " 创建失败");
         }
-        if(utils.queryOneLine(tableName, "projectName", projectName)){
+        if(utils.queryOneLine(tableName, "xmmc", projectName)){
             log.info("project {} is already existing.", projectName);
-            throw new ApiException("project is already existing");
+            return RespResult.fail(400L, projectName + " 已存在");
         }
 
         Date date = new Date();
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
         String dateStr = simpleDateFormat.format(date);
         List<String> values = new ArrayList<String>(){{
-            add((String) context.get("xmmc"));
             add((String) context.get("tzf"));
-            add((String) context.get("xmlx"));
             add((String) context.get("xmlb"));
+            add((String) context.get("xmmc"));
+            add((String) context.get("xmlx"));
             add(dateStr);
             add(Constant.STATUS_DEFAULT);
         }};
@@ -99,9 +110,10 @@ public class ProjectManageController {
         String contextStr = updateProjectStatus.getContext();
         JSONObject context = JSONObject.parseObject(contextStr);
         String projectName = (String) context.get("xmmc");
-        if(!utils.queryOneLine(tableName, "projectName", projectName)){
+        if(!utils.queryOneLine(tableName, "xmmc", projectName)){
             log.info("table:{} projectName:{} is not existing.", tableName, projectName);
-            throw new ApiException("project is not existing");
+            //throw new ApiException("project is not existing");
+            return RespResult.fail(500L, "项目不存在");
         }
 
         Set<String> keys = context.keySet();
@@ -109,12 +121,12 @@ public class ProjectManageController {
         List<String> values = new ArrayList<>();
         for(String key: keys){
             if(!key.equals("xmmc")){
-                columns.add(front2End(key));
+                columns.add(key);
                 values.add((String) context.get(key));
             }
         }
 
-        Boolean status = utils.updateOneLine(tableName, "projectName", projectName, columns, values);
+        Boolean status = utils.updateOneLine(tableName, "xmmc", projectName, columns, values);
         log.info("update result: {}", status);
         return status? RespResult.success(""):RespResult.fail();
     }
