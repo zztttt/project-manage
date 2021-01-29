@@ -110,8 +110,8 @@ public class ProjectManageController {
         String contextStr = updateProjectStatus.getContext();
         JSONObject context = JSONObject.parseObject(contextStr);
         //String projectName = (String) context.get("xmmc");
-        String id = (String) context.get("id");
-        if(!utils.queryOneLine(tableName, "id", id)){
+        Integer id = (Integer) context.get("id");
+        if(!utils.queryOneLine(tableName, "id", String.valueOf(id))){
             log.info("table:{} id:{} is not existing.", tableName, id);
             //throw new ApiException("project is not existing");
             return RespResult.fail(500L, "项目不存在");
@@ -119,15 +119,15 @@ public class ProjectManageController {
 
         Set<String> keys = context.keySet();
         List<String> columns = new ArrayList<>();
-        List<String> values = new ArrayList<>();
+        List<Object> values = new ArrayList<>();
         for(String key: keys){
             if(!key.equals("id")){
                 columns.add(key);
-                values.add((String) context.get(key));
+                values.add(context.get(key));
             }
         }
 
-        Boolean status = utils.updateOneLine(tableName, "id", id, columns, values);
+        Boolean status = utils.updateOneLine(tableName, "id", String.valueOf(id), columns, values);
         log.info("update result: {}", status);
         return status? RespResult.success(""):RespResult.fail();
     }

@@ -107,7 +107,7 @@ public class Utils {
         return result == 1;
     }
 
-    public Boolean updateOneLine(String tableName, String srcColumn, String srcValue, List<String> columns, List<String> values){
+    public Boolean updateOneLine(String tableName, String srcColumn, String srcValue, List<String> columns, List<Object> values){
         if(!queryOneLine(tableName, srcColumn, srcValue)){
             log.info("updateOneLine error. there is no line");
             throw new ApiException("updateOneLine error. there is no line");

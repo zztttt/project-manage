@@ -132,7 +132,7 @@ public class SqlUtils {
      * @param values
      * @return
      */
-    public String updateOneLine(String tableName, String srcColumn, String srcValue, List<String> columns, List<String> values){
+    public String updateOneLine(String tableName, String srcColumn, String srcValue, List<String> columns, List<Object> values){
         StringBuilder sb = new StringBuilder();
         sb.append("update ").append(tableName).append(" set ");
         String link = "";
