@@ -4,8 +4,9 @@ import lombok.Data;
 
 @Data
 public class UploadFile {
-    private String projectName;
-    private String fileName;
-    private String uploader;
-    private String uploadTime;
+    private String tableName;
+    private String context;
+//    private String fileName;
+//    private String uploader;
+//    private String uploadTime;
 }

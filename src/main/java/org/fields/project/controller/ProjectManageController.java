@@ -1,14 +1,12 @@
 package org.fields.project.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.exceptions.ApiException;
 import lombok.extern.slf4j.Slf4j;
 import org.fields.project.common.RespResult;
 import org.fields.project.config.Constant;
-import org.fields.project.entity.request.CreateProject;
-import org.fields.project.entity.request.CreateTable;
-import org.fields.project.entity.request.DeleteProject;
-import org.fields.project.entity.request.UpdateProjectStatus;
+import org.fields.project.entity.request.*;
 import org.fields.project.utils.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -76,8 +74,8 @@ public class ProjectManageController {
         String dateStr = simpleDateFormat.format(date);
         List<String> values = new ArrayList<String>(){{
             add((String) context.get("tzf"));
-            add((String) context.get("xmlb"));
             add((String) context.get("xmmc"));
+            add((String) context.get("xmlb"));
             add((String) context.get("xmlx"));
             add(dateStr);
             add(Constant.STATUS_DEFAULT);
@@ -130,6 +128,15 @@ public class ProjectManageController {
         Boolean status = utils.updateOneLine(tableName, "id", String.valueOf(id), columns, values);
         log.info("update result: {}", status);
         return status? RespResult.success(""):RespResult.fail();
+    }
+
+    @PostMapping("/uploadFile")
+    public RespResult updateFileStatus(@RequestBody UploadFile uploadFile){
+        log.info("uploadFile: {}", uploadFile);
+        String tableName = uploadFile.getTableName();
+        String contextStr = uploadFile.getContext();
+        JSONObject context = JSONObject.parseObject(contextStr);
+        return RespResult.success("");
     }
 
     public void generateDefaultFiles(String projectName){
