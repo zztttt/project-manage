@@ -25,6 +25,7 @@ public class ProjectManageController {
     @Autowired
     Utils utils;
 
+    // 用不着
     @PostMapping("/init")
     public RespResult initTable(@RequestBody CreateTable createTable){
         log.info("create table: {}", createTable.getTableName());
@@ -42,6 +43,7 @@ public class ProjectManageController {
         }
     }
 
+    // 新增项目
     @PostMapping("/create")
     public RespResult createProject(@RequestBody CreateProject createProject){
         log.info("create project: {}", createProject);
@@ -50,6 +52,7 @@ public class ProjectManageController {
         JSONObject context = JSONObject.parseObject(contextStr);
         String projectName = (String) context.get("xmmc");
 
+        // 如果存项目的表不存在，则初始化这张表
         if(!utils.isTableExisting(tableName)){
             // init table
             Set<String> keys = context.keySet();
@@ -88,21 +91,8 @@ public class ProjectManageController {
         return status? RespResult.success(""):RespResult.fail();
     }
 
-    @PostMapping("/delete")
-    public JSONObject deleteProject(@RequestBody DeleteProject deleteProject){
-        log.info("delete project: {}", deleteProject);
-        JSONObject ret = new JSONObject();
-        Boolean status = utils.deleteOneLine("projectInfo", "projectName", deleteProject.getProjectName());
 
-        log.info("delete result: {}", status);
-        if(status){
-            ret.put("code", "delete ok");
-        }else{
-            ret.put("code", "delete error");
-        }
-        return ret;
-    }
-
+    // 更新项目状态
     @PostMapping("/update")
     public RespResult updateProjectStatus(@RequestBody UpdateProjectStatus updateProjectStatus){
         log.info("updateProjectStatus: {}", updateProjectStatus);
@@ -133,13 +123,39 @@ public class ProjectManageController {
         return status? RespResult.success(""):RespResult.fail();
     }
 
+    //上传项目文件
     @PostMapping("/uploadFile")
     public RespResult updateFileStatus(@RequestBody UploadFile uploadFile){
         log.info("uploadFile: {}", uploadFile);
         String tableName = uploadFile.getTableName();
         String contextStr = uploadFile.getContext();
         JSONObject context = JSONObject.parseObject(contextStr);
-        return RespResult.success("");
+
+        String xmmc = (String) context.get("xmmc");
+//        String fileName = (String) context.get("fileName");
+//        String result = (String) context.get("result");
+//        String uploader = (String) context.get("uploader");
+//        String uploadTime = (String) context.get("uploadTime");
+
+        Boolean status = true;
+        Set<String> keys = context.keySet();
+        if(!utils.isTableExisting(tableName)){
+            // init table
+            List<String> columns = new ArrayList<>();
+            List<String> columnTypes = new ArrayList<>();
+            for(String key: keys){
+                columns.add(key);
+                columnTypes.add("varchar(30)");
+            }
+            status = status && utils.createTable(tableName, columns, columnTypes);
+        }
+        status = status && utils.insertOneColumnOfOneLine(tableName, xmmc, "xmmc", (String) context.get("xmmc"));
+        for(String key: keys){
+            if(!key.equals("xmmc"))
+                status = status && utils.insertOneColumnOfOneLine(tableName, xmmc, key, (String) context.get(key));
+        }
+        log.info("uploadFile result: {}", status);
+        return status?RespResult.success(""):RespResult.fail();
     }
 
     public void generateDefaultFiles(String projectName){

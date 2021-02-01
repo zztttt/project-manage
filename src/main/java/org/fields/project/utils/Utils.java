@@ -67,6 +67,28 @@ public class Utils {
         return ret == 1;
     }
 
+    public Boolean insertOneColumnOfOneLine(String tableName, String projectName, String column, String value){
+//        String sql = "select columnName from tableMetadataDetail where tableName = '" + tableName
+//                + "' where columnName = '" + column + "'";
+//        List<String> ret = jdbcTemplate.queryForList(sql, String.class);
+//        assert ret.size() == 1;
+        String querySql = "select xmmc from "+ tableName + " where xmmc = '" + projectName + "'";
+        List<String> ret = jdbcTemplate.queryForList(querySql, String.class);
+        Boolean status = true;
+        // not exist
+        if(ret.size() == 0){
+            String sql = "insert into " + tableName + " (" + column + ") value ('" + value + "')";
+            int count = jdbcTemplate.update(sql);
+            status = status && count == 1;
+        }else{
+            String sql = "update " + tableName + " set " + column + "='" + value + "'"
+                    + " where xmmc = '" + projectName + "'";
+            int count = jdbcTemplate.update(sql);
+            status = status && count == 1;
+        }
+        return status;
+    }
+
     public Boolean deleteOneLine(String tableName, String srcColumn, String srcValue){
         if(!queryOneLine(tableName, srcColumn, srcValue)){
             log.info("line is not existing.");
@@ -128,5 +150,9 @@ public class Utils {
         List<String> ret = jdbcTemplate.queryForList(sql, String.class);
         return ret;
     }
+
+//    public String queryTableColumn(String tableName, String columnName){
+//        String sql = "select columnName from tableMetadataDetail where tableName = '" + tableName + "’ where "
+//    }
 }
 
